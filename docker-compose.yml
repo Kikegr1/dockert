@@ -1,0 +1,51 @@
+version: "3.1"
+#Indicamos la version de docker compose que utilizamos
+#Y luego los servicios que vamos a implementar
+services:
+    servidorsql:
+        image: mysql:latest
+        container_name: sql
+        ports:
+            - 3307:3308
+        command: --default-authentication-plugin=mysql_native_password
+        environment:
+            #Base de datos que utilizaremos.
+            MYSQ_DATABASE: tutorias
+            #Contraseña para root.
+            MYSQL_ROOT_PASSWORD: pass
+        volumes:
+            - ./bd:/docker-entrypoint-initdb.d
+            - ./conf:/etc/mysql/conf.d
+            - persistent:/var/lib/mysql
+        networks:
+            - default
+    php:
+        build:
+            #Indicamos la carpeta dodne guardamos el Docker File
+            context: ./dockerfile
+            #Indicamos el archivo dockerfile de este contenedor
+            dockerfile: apache_file
+        ports:
+            - 9091:80
+        volumes:
+            #Indicamos con quien va relacionado
+            - ./www:/var/www/html
+        links: 
+            #Indicamos con quien va relacionado
+            - servidorsql
+        networks:
+            - default
+        container_name: hostingphp
+    phpmyadmin:
+        image: phpmyadmin:latest
+        container_name: phpmyadmin
+        links: 
+            #Indicamos con quien va relacionado
+            - servidorsql:db
+        ports:
+            - 8081:80
+        environment:
+            MYSQL_USER: root
+            MYSQL_ROOT_PASSWORD: pass
+volumes:
+    persistent:
